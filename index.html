@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lung Diseases Classify</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="reset.css" />
+  </head>
+  <body>
+    <section class="container">
+      <main class="main">
+        <h1>Sistema de clasificação de doenças pulmonares</h1>
+      </main>
+      <div class="center-align">
+        <div class="limit-size">
+          <div class="content-details">
+            <div class="details">
+              <details>
+                <p>Mini sistema de classificação de imagens, para identificar se um raio X do pulmão contém pneumonia bacteriana, pneumonia viral, Covid-19, pulmão normal ou nenhum desses casos.</p>
+              </details>
+            </div>
+          </div>
+          <div class="load-image">
+            <img id="preview" width="250" alt="" />
+          </div>
+          <br>
+          <div class="send-image">
+            <label for="image_dog">
+              <p id="location-src">Clique para adicionar sua imagem</p>
+              <input
+                type="file"
+                name="image"
+                id="image_dog"
+                onchange="previewImage()"
+              />
+            </label>
+            <button class="btn" onclick="init()">Enviar</button>
+          </div>
+          <div class="options">
+            <ul id="options">
+              <li id="pneumonia-bacteria">Pneumonia bacteria</li>
+              <li id="pneumonia-virus">Pneumonia virus</li>
+              <li id="Covid-19">Covid-19</li>
+              <li id="Normal">Normal</li>
+              <li id="None">None</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+      const URL = "./my_model/";
+
+      let model, webcam, labelContainer, maxPredictions;
+
+      async function init() {
+        const modelURL = URL + "model.json";
+        const metadataURL = URL + "metadata.json";
+        model = await tmImage.load(modelURL, metadataURL);
+        predict();
+      }
+
+      async function loop() {
+        await predict();
+      }
+
+      async function predict() {
+        //inicia a predição
+        const predictions = await model.predict(
+          document.getElementById("preview")
+        );
+        
+        //busca o maior valor probabilistico da classificação de uma imagem
+        var max = predictions.reduce(function (prev, current) {
+          return prev.probability > current.probability ? prev : current;
+        });
+
+        //zera classes ja selecionadas e seleciona a nova
+        document.getElementById("pneumonia-bacteria").setAttribute("class", "");
+        document.getElementById("pneumonia-virus").setAttribute("class", "");
+        document.getElementById("Covid-19").setAttribute("class", "");
+        document.getElementById("Normal").setAttribute("class", "");
+        document.getElementById("None").setAttribute("class", "");
+        document.getElementById(max.className).setAttribute("class", "select")
+
+        //zera li's do DOM
+        //document.querySelector("ul[id=options]").innerHTML = "";
+        
+        /* 
+        ** Caso eu queira adicionar as probabilidades na lista
+        **
+        //percorre o array, renderiza uma "li" a cada interação e adiciona na que tem maior uma classe select
+        predictions.map((prediction) => {
+          document
+            .querySelector("ul[id=options]")
+            .insertAdjacentHTML(
+              "beforeend",
+              `<li class='${
+                prediction.probability === max.probability && "select"
+              }'>${prediction.className}</li>`
+            );
+          probability = prediction.probability;
+        });
+        */
+      }
+
+      function previewImage() {
+        var image = document.querySelector("input[name=image]").files[0];
+        var preview = document.querySelector("img");
+        var reader = new FileReader();
+        reader.onloadend = () => {
+          preview.src = reader.result;
+        };
+
+        if (image) {
+          reader.readAsDataURL(image);
+          console.log(image);
+          document.getElementById("location-src").innerText = image.name;
+        } else {
+          preview.src = "";
+        }
+      }
+    </script>
+  </body>
+</html>
