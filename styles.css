@@ -147,7 +147,7 @@ div.options ul {
       -ms-flex-pack: justify;
           justify-content: space-between;
   padding: 1rem;
-  text-transform: lowercase;
+  text-transform: unset;
   font-weight: bold;
   color: #fff;
   padding-top: 5rem;
